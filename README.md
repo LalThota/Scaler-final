@@ -1,6 +1,6 @@
 ---
 title: scaler
-emoji: robot
+emoji: "🤖"
 colorFrom: blue
 colorTo: green
 sdk: docker

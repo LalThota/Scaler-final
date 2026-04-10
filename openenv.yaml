@@ -45,6 +45,17 @@ api:
     metrics: "/metrics"
 evaluation:
   metric: "avg_score"
-  grader: "deterministic"
+  grader: "app.grader:grade_action_score"
+  graders:
+    default: "app.grader:grade_action_score"
+  task_graders:
+    EASY-001: "app.grader:grade_action_score"
+    MEDIUM-001: "app.grader:grade_action_score"
+    HARD-001: "app.grader:grade_action_score"
+    EXTREME-001: "app.grader:grade_action_score"
+    MEDIUM-002: "app.grader:grade_action_score"
+    HARD-002: "app.grader:grade_action_score"
+    EASY-002: "app.grader:grade_action_score"
+    EXTREME-002: "app.grader:grade_action_score"
   max_steps_per_task: 8
   max_total_time_min: 20

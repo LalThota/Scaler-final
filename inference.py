@@ -224,11 +224,14 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             if llm_client is not None:
                 mode = "llm"
                 try:
-                    action = await asyncio.to_thread(
-                        llm_generate_action,
-                        llm_client,
-                        task_id,
-                        obs.get("customer_query", ""),
+                    action = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            llm_generate_action,
+                            llm_client,
+                            task_id,
+                            obs.get("customer_query", ""),
+                        ),
+                        timeout=8.0,
                     )
                 except Exception:
                     # Keep task graded even if proxy/LLM call fails.

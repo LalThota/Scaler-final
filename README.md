@@ -89,7 +89,7 @@ Submit an agent action.
 - `step_count`: `int`
 
 ### Reward Range
-- Reward is always clipped to `[0.0, 1.0]`
+- Reward is always clipped to `(0.0, 1.0)`
 - Endpoint returns full reward breakdown and textual feedback
 
 ### GET `/state?task_id=<id>`

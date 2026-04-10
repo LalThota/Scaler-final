@@ -241,12 +241,12 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             done = bool(result.get("done", False))
 
             # Required structured log format for evaluators.
-            print(f"[STEP] task_id={task_id} step=1 score={score:.4f} done={done} mode={mode}")
+            print(f"[STEP] task_id={task_id} step=1 score={score:.6f} done={done} mode={mode}")
             return score
 
     except Exception as e:
-        print(f"[STEP] task_id={task_id} step=1 score=0.0001 done=false mode=error error={str(e)}")
-        return 0.0001
+        print(f"[STEP] task_id={task_id} step=1 score=0.001000 done=false mode=error error={str(e)}")
+        return 0.001
 
 
 async def main():

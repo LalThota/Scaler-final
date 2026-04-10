@@ -1,7 +1,8 @@
 from typing import Dict, List, Any
 from .models import Reward, Action, Task
 
-EPSILON = 1e-6
+# Keep scores safely away from display/rounding boundaries used by validators.
+EPSILON = 1e-3
 
 # Action costs
 COSTS = {

@@ -1,6 +1,8 @@
 from typing import List, Set, Dict, Any
 from .models import Action, Task
 
+EPSILON = 1e-3
+
 def get_jaccard_similarity(set1: Set[str], set2: Set[str]) -> float:
     if not set1 and not set2:
         return 1.0
@@ -78,3 +80,9 @@ def calculate_base_score(action: Action, task: Task) -> Dict[str, float]:
         "response": 0.2 * response_score,
         "resolution": 0.1 * resolution_score
     }
+
+
+def grade_action_score(action: Action, task: Task) -> float:
+    """Return a strict open-interval scalar score for validator-facing graders."""
+    total = float(sum(calculate_base_score(action, task).values()))
+    return max(EPSILON, min(1.0 - EPSILON, total))

@@ -22,11 +22,15 @@ dependencies = [
   "numpy",
   "scikit-learn",
   "pyyaml",
-  "openai"
+  "openai",
+  "openenv-core>=0.2.0"
 ]
 
+[project.scripts]
+server = "server.app:main"
+
 [tool.setuptools]
-packages = ["app"]
+packages = ["app", "server"]
 include-package-data = true
 
 [tool.setuptools.package-data]

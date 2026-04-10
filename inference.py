@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:7860")
+SIM_API_URL = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
 MODEL_NAME = os.getenv("MODEL_NAME", "")
-HF_TOKEN = os.getenv("HF_TOKEN", "")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://router.huggingface.co/v1")
+API_KEY = os.getenv("API_KEY", "")
+OPENAI_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 
 # Deterministic fallback actions to keep inference reproducible.
 KNOWLEDGE_BASE = {
@@ -143,9 +143,9 @@ def keyword_policy_action(query: str) -> Dict[str, Any]:
 
 
 def build_openai_client() -> Optional[OpenAI]:
-    if not MODEL_NAME or not HF_TOKEN:
+    if not MODEL_NAME or not API_KEY:
         return None
-    return OpenAI(base_url=OPENAI_BASE_URL, api_key=HF_TOKEN)
+    return OpenAI(base_url=OPENAI_BASE_URL, api_key=API_KEY)
 
 
 def parse_action_text(action_text: str, task_id: str) -> Dict[str, Any]:
@@ -208,7 +208,7 @@ def llm_generate_action(client: OpenAI, task_id: str, query: str) -> Dict[str, A
 async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            reset_resp = await client.post(f"{API_BASE_URL}/reset?task_id={task_id}")
+            reset_resp = await client.post(f"{SIM_API_URL}/reset?task_id={task_id}")
             obs = reset_resp.json()
 
             mode = "fallback"
@@ -225,7 +225,7 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
                     obs.get("customer_query", ""),
                 )
 
-            resp = await client.post(f"{API_BASE_URL}/step?task_id={task_id}", json=action)
+            resp = await client.post(f"{SIM_API_URL}/step?task_id={task_id}", json=action)
             result = resp.json()
             score = float(result["reward"]["score"])
             done = bool(result.get("done", False))
@@ -240,13 +240,13 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
 
 
 async def main():
-    print(f"[START] api_base_url={API_BASE_URL} model_name={MODEL_NAME or 'fallback'}")
+    print(f"[START] sim_api_url={SIM_API_URL} model_name={MODEL_NAME or 'fallback'}")
 
     llm_client = build_openai_client()
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
-            resp = await client.get(f"{API_BASE_URL}/tasks")
+            resp = await client.get(f"{SIM_API_URL}/tasks")
             task_ids = resp.json()
         except Exception:
             task_ids = ["EASY-001", "MEDIUM-001", "HARD-001", "EXTREME-001"]

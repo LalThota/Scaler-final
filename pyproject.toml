@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "csos-plus-plus"
+version = "1.0.0"
+description = "Adaptive Multi-Step Customer Support Operations Simulator (CSOS++)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Lalthota" }
+]
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "jinja2",
+  "python-multipart",
+  "httpx",
+  "numpy",
+  "scikit-learn",
+  "pyyaml",
+  "openai"
+]
+
+[tool.setuptools]
+packages = ["app"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["static/*"]

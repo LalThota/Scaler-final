@@ -15,8 +15,13 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 SIM_API_URL = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
-MODEL_NAME = os.getenv("MODEL_NAME", "")
-API_KEY = os.getenv("API_KEY", "")
+MODEL_NAME = (
+    os.getenv("MODEL_NAME")
+    or os.getenv("MODEL")
+    or os.getenv("OPENAI_MODEL")
+    or "gpt-4o-mini"
+)
+API_KEY = os.getenv("API_KEY", os.getenv("HF_TOKEN", ""))
 OPENAI_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 
 # Deterministic fallback actions to keep inference reproducible.
@@ -143,7 +148,7 @@ def keyword_policy_action(query: str) -> Dict[str, Any]:
 
 
 def build_openai_client() -> Optional[OpenAI]:
-    if not MODEL_NAME or not API_KEY:
+    if not API_KEY:
         return None
     return OpenAI(base_url=OPENAI_BASE_URL, api_key=API_KEY)
 

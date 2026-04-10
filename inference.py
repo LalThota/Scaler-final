@@ -48,11 +48,98 @@ KNOWLEDGE_BASE = {
         "departments": ["technical_support", "security", "billing", "legal"],
         "response_message": "EMERGENCY: We are investigating the system downtime and potential breach. Our legal and security teams are on high alert. I am connecting you with a supervisor now.",
         "mark_resolved": False # Must escalate
+    },
+    "MEDIUM-002": {
+        "intents": ["billing_error", "feature_issue"],
+        "priority": "medium",
+        "departments": ["billing", "technical_support"],
+        "response_message": "Thank you for reporting this. We are correcting your invoice plan and investigating the missing dashboard usage charts.",
+        "mark_resolved": True,
+        "ask_clarification": False,
+    },
+    "HARD-002": {
+        "intents": ["security_breach_report", "login_issue", "legal_threat", "refund_request"],
+        "priority": "critical",
+        "departments": ["security", "technical_support", "legal", "billing"],
+        "response_message": "We are treating this as urgent. Our security investigation is active, account access support is engaged, and legal plus billing teams are escalating your request immediately.",
+        "mark_resolved": False,
+        "ask_clarification": False,
+    },
+    "EASY-002": {
+        "intents": ["profile_update"],
+        "priority": "low",
+        "departments": ["customer_relations"],
+        "response_message": "We can update your email now. Please confirm the new email so we can complete the profile update.",
+        "mark_resolved": True,
+        "ask_clarification": False,
+    },
+    "EXTREME-002": {
+        "intents": ["system_down", "security_breach_report", "payment_failure"],
+        "priority": "critical",
+        "departments": ["technical_support", "security", "billing"],
+        "response_message": "Critical incident acknowledged. We have started incident mitigation, security investigation, and checkout recovery with continuous status updates and executive escalation.",
+        "mark_resolved": False,
+        "ask_clarification": False,
     }
 }
 
 def get_fallback_action(task_id: str) -> Dict[str, Any]:
     return KNOWLEDGE_BASE.get(task_id, KNOWLEDGE_BASE["EASY-001"])
+
+
+def keyword_policy_action(query: str) -> Dict[str, Any]:
+    text = query.lower()
+    intents = []
+    departments = []
+    priority = "medium"
+    mark_resolved = True
+    ask_clarification = False
+
+    if any(k in text for k in ["password", "reset", "locked", "login"]):
+        intents.append("login_issue")
+        departments.append("technical_support")
+    if any(k in text for k in ["charge", "invoice", "refund", "payment", "fraud"]):
+        intents.append("billing_error")
+        departments.append("billing")
+    if any(k in text for k in ["breach", "leak", "hacked", "suspicious"]):
+        intents.append("security_breach_report")
+        departments.append("security")
+        priority = "critical"
+        mark_resolved = False
+    if any(k in text for k in ["legal", "sue", "lawsuit"]):
+        intents.append("legal_threat")
+        departments.append("legal")
+        priority = "critical"
+        mark_resolved = False
+    if any(k in text for k in ["down", "outage", "broken", "latency"]):
+        intents.append("system_down")
+        departments.append("technical_support")
+        priority = "critical"
+        mark_resolved = False
+
+    if "?" in text or "not sure" in text:
+        ask_clarification = True
+
+    if not intents:
+        intents = ["general_query"]
+    if not departments:
+        departments = ["customer_relations"]
+
+    departments = sorted(set(departments))
+    intents = sorted(set(intents))
+    response = (
+        "Thank you for contacting support. I have identified your issue and routed it to the right team. "
+        "We are investigating and will provide updates shortly."
+    )
+
+    return {
+        "intents": intents,
+        "priority": priority,
+        "departments": departments,
+        "response_message": response,
+        "mark_resolved": mark_resolved,
+        "ask_clarification": ask_clarification,
+    }
 
 
 def build_openai_client() -> Optional[OpenAI]:
@@ -126,6 +213,9 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
 
             mode = "fallback"
             action = get_fallback_action(task_id)
+            if task_id not in KNOWLEDGE_BASE:
+                mode = "policy"
+                action = keyword_policy_action(obs.get("customer_query", ""))
             if llm_client is not None:
                 mode = "llm"
                 action = await asyncio.to_thread(

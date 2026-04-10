@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional, Any, Tuple
 from .models import Observation, Action, Reward, Task
 from .dataset import TASKS, get_task_by_id
-from .grader import calculate_base_score
+from .grader import calculate_base_score, calculate_action_confidence
 from .reward import calculate_reward
 
 class CustomerSupportEnv:
@@ -14,12 +14,16 @@ class CustomerSupportEnv:
         self.observation = Observation(
             ticket_id=self.task.id,
             customer_query=self.task.customer_query,
+            task_domain=self.task.domain,
+            customer_segment=self.task.customer_segment,
             extracted_intents=[],
             priority="medium",
             assigned_departments=[],
             conversation_history=[],
             status="open",
-            step_count=0
+            step_count=0,
+            confidence=0.0,
+            suggested_next_action="classify"
         )
         self.repeated_errors = 0
         self.last_action_was_good = True
@@ -48,16 +52,30 @@ class CustomerSupportEnv:
         
         # 2. Calculate Base Score via Grader
         base_score_dict = calculate_base_score(action, self.task)
+        confidence = calculate_action_confidence(base_score_dict, action, self.task)
+        self.observation.confidence = confidence
         
         # 3. Calculate Reward via Reward Module
-        reward_obj = calculate_reward(base_score_dict, self.observation.step_count, self.repeated_errors, action)
+        reward_obj = calculate_reward(
+            base_score_dict,
+            self.observation.step_count,
+            self.repeated_errors,
+            action,
+            confidence=confidence,
+            ambiguity_level=self.task.ambiguity_level,
+        )
         
         # Check if action was good or bad to track repeated errors
         action_score = sum(base_score_dict.values())
         if action_score < 0.5:
             self.repeated_errors += 1
+            self.observation.suggested_next_action = "ask_clarification"
         else:
-            self.repeated_errors = 0 # reset on progress?
+            self.repeated_errors = 0
+            self.observation.suggested_next_action = "respond_or_resolve"
+
+        if self.task.must_escalate and not action.mark_resolved:
+            self.observation.suggested_next_action = "escalate"
             
         # 4. Check if Terminal
         is_terminal = False

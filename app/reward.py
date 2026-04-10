@@ -9,7 +9,14 @@ COSTS = {
     "invalid": 0.2
 }
 
-def calculate_reward(base_score_dict: Dict[str, float], step_count: int, repeated_errors: int, last_action: Action) -> Reward:
+def calculate_reward(
+    base_score_dict: Dict[str, float],
+    step_count: int,
+    repeated_errors: int,
+    last_action: Action,
+    confidence: float = 0.0,
+    ambiguity_level: str = "low",
+) -> Reward:
     total_score = sum(base_score_dict.values())
     
     # Penalties
@@ -23,8 +30,14 @@ def calculate_reward(base_score_dict: Dict[str, float], step_count: int, repeate
     if last_action.mark_resolved:
         action_cost = COSTS.get("escalate", 0.1) # Treat resolution as a major action.
     
+    clarification_bonus = 0.0
+    if ambiguity_level in {"medium", "high"} and last_action.ask_clarification:
+        clarification_bonus = 0.03
+
+    confidence_bonus = 0.05 * max(0.0, min(1.0, confidence))
+
     # Combined reward
-    reward_value = total_score - step_penalty - error_penalty - action_cost
+    reward_value = total_score - step_penalty - error_penalty - action_cost + clarification_bonus + confidence_bonus
     reward_value = max(0.0, min(1.0, reward_value))
     
     # Feedback
@@ -37,6 +50,8 @@ def calculate_reward(base_score_dict: Dict[str, float], step_count: int, repeate
         feedback_msgs.append("Incorrect department routing.")
     if base_score_dict["response"] < 0.2:
         feedback_msgs.append("Response lacks required keywords.")
+    if confidence < 0.4:
+        feedback_msgs.append("Low confidence action; consider clarification or escalation.")
     
     if not feedback_msgs:
         feedback_msgs.append("Action is accurate and well-structured.")

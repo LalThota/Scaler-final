@@ -4,12 +4,28 @@ objective: "Simulate a real-world customer support system where an agent extract
 tasks:
   - id: "EASY-001"
     difficulty: "EASY"
+    domain: "account_security"
   - id: "MEDIUM-001"
     difficulty: "MEDIUM"
+    domain: "saas_support"
   - id: "HARD-001"
     difficulty: "HARD"
+    domain: "enterprise_support"
   - id: "EXTREME-001"
     difficulty: "EXTREME"
+    domain: "incident_response"
+  - id: "MEDIUM-002"
+    difficulty: "MEDIUM"
+    domain: "b2b_saas"
+  - id: "HARD-002"
+    difficulty: "HARD"
+    domain: "trust_and_safety"
+  - id: "EASY-002"
+    difficulty: "EASY"
+    domain: "account_management"
+  - id: "EXTREME-002"
+    difficulty: "EXTREME"
+    domain: "platform_reliability"
 api:
   port: 7860
   endpoints:
@@ -17,6 +33,8 @@ api:
     step: "/step"
     state: "/state"
     debug: "/debug"
+    health: "/health"
+    metrics: "/metrics"
 evaluation:
   metric: "avg_score"
   grader: "deterministic"

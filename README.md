@@ -42,11 +42,16 @@ The reward function evaluates every action:
 
 ## 🧪 TASK DESIGN
 
-The environment includes 4 tasks ranging from EASY to EXTREME:
+The environment includes 8 tasks ranging from EASY to EXTREME across multiple domains:
 - **EASY**: Single clear intent (e.g., password reset).
 - **MEDIUM**: Ambiguous query (e.g., login issue + double charge).
 - **HARD**: Multi-intent with emotional tone (e.g., 10-year customer complaining/billing/manager request).
 - **EXTREME**: 3+ complex intents, legal/security threats requiring escalation and multi-step reasoning.
+
+Additional product-grade dimensions:
+- Domain slices (security, billing, reliability, legal, account management)
+- Customer-segment slices (consumer, enterprise, small business)
+- Ambiguity levels for clarification-aware decisioning
 
 ## 🌐 API USAGE
 
@@ -93,6 +98,15 @@ Get current state observation.
 ### GET `/debug?task_id=<id>`
 View debugging information (ground truth vs predictions).
 
+### GET `/health`
+Service health and active runtime stats.
+
+### GET `/metrics`
+Online analytics for score quality, completion rate, and performance slices by difficulty/domain/customer segment.
+
+### GET `/tasks/details`
+Task catalog metadata (difficulty, domain, ambiguity, escalation requirements).
+
 ## 🐳 DEPLOYMENT
 
 1. Build the Docker image:
@@ -134,6 +148,12 @@ Run baseline:
 ## 🔁 REPRODUCIBILITY GUARANTEE
 
 The system is fully deterministic. Given the same task and sequence of actions, the grader will always return the exact same score and feedback. No randomness is used in the evaluation process.
+
+## 📊 Real-Time Product Signals
+
+- Confidence score in every observation
+- Suggested next action (`ask_clarification`, `escalate`, `respond_or_resolve`)
+- Live analytics endpoint with score and completion slices by difficulty/domain/segment
 
 ## ✅ Submission Checklist Mapping
 

@@ -31,6 +31,7 @@ class Reward(BaseModel):
 class Task(BaseModel):
     id: str
     customer_query: str
+    grader: str = "app.grader:grade_action_score"
     expected_intents: List[str]
     expected_priority: str
     expected_departments: List[str]

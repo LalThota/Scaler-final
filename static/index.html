@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSOS++ Debug Console</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <h1>CSOS++ <span class="sub">Debug Console</span></h1>
+            <div class="status-badge" id="current-status">STATUS: UNKNOWN</div>
+        </div>
+        <div class="header-right">
+            <div class="task-control">
+                <label for="task-id-select">Task ID:</label>
+                <select id="task-id-select">
+                    <option value="EASY-001">EASY-001</option>
+                    <option value="MEDIUM-001">MEDIUM-001</option>
+                    <option value="HARD-001">HARD-001</option>
+                    <option value="EXTREME-001">EXTREME-001</option>
+                </select>
+            </div>
+            <button id="reset-btn" class="btn btn-danger">Reset</button>
+            <button id="refresh-btn" class="btn btn-secondary">Refresh State</button>
+        </div>
+    </header>
+
+    <main class="debug-grid">
+        <!-- Column 1: Observation -->
+        <section class="panel" id="observation-panel">
+            <div class="panel-header">
+                <h2>Observation</h2>
+                <span class="step-counter">Steps: <b id="step-count">0</b></span>
+            </div>
+            <div class="panel-body">
+                <pre id="observation-json" class="json-viewer">{}</pre>
+            </div>
+        </section>
+
+        <!-- Column 2: Action Input -->
+        <section class="panel" id="action-panel">
+            <div class="panel-header">
+                <h2>Action Input</h2>
+            </div>
+            <div class="panel-body">
+                <form id="action-form">
+                    <div class="form-group">
+                        <label for="input-intents">Intents (comma separated)</label>
+                        <input type="text" id="input-intents" placeholder="e.g. password_reset, feedback">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-priority">Priority</label>
+                        <select id="input-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-departments">Departments (comma separated)</label>
+                        <input type="text" id="input-departments" placeholder="security, technical_support">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-message">Response Message</label>
+                        <textarea id="input-message" rows="5" placeholder="Enter agent's response text..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="input-resolved">
+                            <label for="input-resolved">Mark Resolved</label>
+                        </div>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="input-clarification">
+                            <label for="input-clarification">Ask Clarification</label>
+                        </div>
+                    </div>
+                    <button type="submit" id="submit-btn" class="btn btn-primary">Submit Step</button>
+                </form>
+            </div>
+            <div class="history-log">
+                <h3>Action History (Last 5)</h3>
+                <ul id="history-list"></ul>
+            </div>
+        </section>
+
+        <!-- Column 3: Output -->
+        <section class="panel" id="output-panel">
+            <div class="panel-header">
+                <h2>Evaluation Output</h2>
+            </div>
+            <div class="panel-body">
+                <div class="reward-section">
+                    <h3>Reward Score</h3>
+                    <div class="score-display" id="score-val">0.00</div>
+                    <div class="feedback-box" id="feedback-val">No feedback yet.</div>
+                    <div class="breakdown-grid" id="breakdown-val"></div>
+                </div>
+                <hr>
+                <div class="debug-section">
+                    <h3>System Debug Info</h3>
+                    <div id="debug-errors" class="error-container hidden"></div>
+                    <pre id="debug-json" class="json-viewer small">{}</pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast">Error Message</div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

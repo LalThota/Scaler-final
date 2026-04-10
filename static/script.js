@@ -19,6 +19,10 @@ const elements = {
     stepCount: document.getElementById('step-count'),
     statusBadge: document.getElementById('current-status'),
     toast: document.getElementById('toast'),
+    taskMeta: document.getElementById('task-meta'),
+    metricAvg: document.getElementById('metric-avg'),
+    metricCompletion: document.getElementById('metric-completion'),
+    metricEvents: document.getElementById('metric-events'),
     // Inputs
     inputIntents: document.getElementById('input-intents'),
     inputPriority: document.getElementById('input-priority'),
@@ -29,11 +33,12 @@ const elements = {
 };
 
 let actionHistory = [];
+let taskDetailsMap = {};
 
 /** API Utilities **/
-async function apiCall(endpoint, method = 'GET', body = null) {
+async function apiCall(endpoint, method = 'GET', body = null, withTaskId = true) {
     const taskId = elements.taskId.value;
-    const url = `${endpoint}?task_id=${taskId}`;
+    const url = withTaskId ? `${endpoint}?task_id=${taskId}` : endpoint;
     
     const options = {
         method,
@@ -105,6 +110,59 @@ async function updateDebug() {
     }
 }
 
+function updateTaskMeta() {
+    if (!elements.taskMeta) return;
+    const selected = elements.taskId.value;
+    const task = taskDetailsMap[selected];
+    if (!task) {
+        elements.taskMeta.textContent = 'Task metadata unavailable for selected task.';
+        return;
+    }
+
+    elements.taskMeta.textContent =
+        `Difficulty: ${task.difficulty} | Domain: ${task.domain} | Segment: ${task.customer_segment} | Ambiguity: ${task.ambiguity_level} | Escalate: ${task.must_escalate}`;
+}
+
+async function loadTasks() {
+    const tasks = await apiCall('/tasks/details', 'GET', null, false);
+    if (!tasks || !Array.isArray(tasks)) return;
+
+    taskDetailsMap = {};
+    tasks.forEach(task => {
+        taskDetailsMap[task.id] = task;
+    });
+
+    const current = elements.taskId.value;
+    elements.taskId.innerHTML = '';
+    tasks.forEach(task => {
+        const option = document.createElement('option');
+        option.value = task.id;
+        option.textContent = `${task.id} (${task.difficulty})`;
+        elements.taskId.appendChild(option);
+    });
+
+    if (taskDetailsMap[current]) {
+        elements.taskId.value = current;
+    }
+
+    updateTaskMeta();
+}
+
+async function updateMetrics() {
+    const metrics = await apiCall('/metrics', 'GET', null, false);
+    if (!metrics) return;
+
+    if (elements.metricAvg) {
+        elements.metricAvg.textContent = Number(metrics.avg_score || 0).toFixed(2);
+    }
+    if (elements.metricCompletion) {
+        elements.metricCompletion.textContent = `${Math.round((metrics.completion_rate || 0) * 100)}%`;
+    }
+    if (elements.metricEvents) {
+        elements.metricEvents.textContent = String(metrics.events ?? '--');
+    }
+}
+
 function addHistory(action) {
     const summary = action.mark_resolved ? "RESOLVE" : action.response_message ? "RESPOND" : "CLASSIFY";
     const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -127,6 +185,7 @@ async function handleReset() {
         elements.feedbackView.textContent = 'Environment reset.';
         elements.breakdownGrid.innerHTML = '';
         await updateDebug();
+        await updateMetrics();
     }
     elements.resetBtn.disabled = false;
 }
@@ -135,6 +194,8 @@ async function handleRefresh() {
     const obs = await apiCall('/state');
     if (obs) updateObservation(obs);
     await updateDebug();
+    updateTaskMeta();
+    await updateMetrics();
 }
 
 async function handleSubmit(e) {
@@ -162,6 +223,7 @@ async function handleSubmit(e) {
         updateReward(result.reward);
         addHistory(action);
         await updateDebug();
+        await updateMetrics();
         
         if (result.done) {
             showToast("Terminal state reached.");
@@ -177,4 +239,7 @@ elements.form.addEventListener('submit', handleSubmit);
 elements.taskId.addEventListener('change', handleRefresh);
 
 // Initial State Sync
-window.addEventListener('DOMContentLoaded', handleRefresh);
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadTasks();
+    await handleRefresh();
+});

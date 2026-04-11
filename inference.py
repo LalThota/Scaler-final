@@ -211,20 +211,20 @@ def llm_generate_action(client: OpenAI, model_name: str, task_id: str, query: st
 async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
     # Read environment variables at runtime
     sim_api_url = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
-    model_name = os.getenv("MODEL_NAME", "")
+    api_key = os.getenv("API_KEY", "")
+    api_base_url = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+    model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")  # Use sensible default
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             reset_resp = await client.post(f"{sim_api_url}/reset?task_id={task_id}")
             obs = reset_resp.json()
 
-            mode = "fallback"
-            action = get_fallback_action(task_id)
-            if task_id not in KNOWLEDGE_BASE:
-                mode = "policy"
-                action = keyword_policy_action(obs.get("customer_query", ""))
-            if llm_client is not None:
+            # If API_KEY is set, the validator wants us to use LLM proxy mode
+            if api_key:
                 mode = "llm"
+                # Create fresh client with proxy credentials for each task to ensure fresh auth
+                llm_client = OpenAI(base_url=api_base_url, api_key=api_key)
                 action = await asyncio.to_thread(
                     llm_generate_action,
                     llm_client,
@@ -232,6 +232,13 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
                     task_id,
                     obs.get("customer_query", ""),
                 )
+            else:
+                # Fallback mode: use hardcoded logic
+                mode = "fallback"
+                action = get_fallback_action(task_id)
+                if task_id not in KNOWLEDGE_BASE:
+                    mode = "policy"
+                    action = keyword_policy_action(obs.get("customer_query", ""))
 
             resp = await client.post(f"{sim_api_url}/step?task_id={task_id}", json=action)
             result = resp.json()
@@ -250,11 +257,10 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
 async def main():
     # Read environment variables at runtime to capture validator-injected values
     sim_api_url = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
-    model_name = os.getenv("MODEL_NAME", "")
+    api_key = os.getenv("API_KEY", "")
+    model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
     
     print(f"[START] sim_api_url={sim_api_url} model_name={model_name or 'fallback'}")
-
-    llm_client = build_openai_client()
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -265,7 +271,8 @@ async def main():
 
     scores = []
     for task_id in task_ids:
-        score = await run_task(task_id, llm_client)
+        # Pass None for llm_client since we create it fresh in each task now
+        score = await run_task(task_id, None)
         scores.append(score)
 
     avg_score = statistics.mean(scores) if scores else 0.0

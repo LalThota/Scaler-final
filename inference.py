@@ -14,10 +14,8 @@ logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-SIM_API_URL = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
-MODEL_NAME = os.getenv("MODEL_NAME", "")
-API_KEY = os.getenv("API_KEY", "")
-OPENAI_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+# Note: Environment variables are read at runtime (in functions), not at module import time.
+# This ensures injected variables from the validator are captured correctly.
 
 # Deterministic fallback actions to keep inference reproducible.
 KNOWLEDGE_BASE = {
@@ -143,9 +141,14 @@ def keyword_policy_action(query: str) -> Dict[str, Any]:
 
 
 def build_openai_client() -> Optional[OpenAI]:
-    if not MODEL_NAME or not API_KEY:
+    # Read environment variables at runtime to capture validator-injected values
+    model_name = os.getenv("MODEL_NAME", "")
+    api_key = os.getenv("API_KEY", "")
+    api_base_url = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+    
+    if not model_name or not api_key:
         return None
-    return OpenAI(base_url=OPENAI_BASE_URL, api_key=API_KEY)
+    return OpenAI(base_url=api_base_url, api_key=api_key)
 
 
 def parse_action_text(action_text: str, task_id: str) -> Dict[str, Any]:
@@ -181,7 +184,7 @@ def parse_action_text(action_text: str, task_id: str) -> Dict[str, Any]:
         return get_fallback_action(task_id)
 
 
-def llm_generate_action(client: OpenAI, task_id: str, query: str) -> Dict[str, Any]:
+def llm_generate_action(client: OpenAI, model_name: str, task_id: str, query: str) -> Dict[str, Any]:
     prompt = (
         "You are a customer-support routing agent. Return ONLY valid JSON with keys: "
         "intents (list of strings), priority (low|medium|high|critical), departments "
@@ -190,7 +193,7 @@ def llm_generate_action(client: OpenAI, task_id: str, query: str) -> Dict[str, A
     )
 
     completion = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=model_name,
         temperature=0,
         messages=[
             {"role": "system", "content": prompt},
@@ -206,9 +209,13 @@ def llm_generate_action(client: OpenAI, task_id: str, query: str) -> Dict[str, A
 
 
 async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
+    # Read environment variables at runtime
+    sim_api_url = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
+    model_name = os.getenv("MODEL_NAME", "")
+    
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            reset_resp = await client.post(f"{SIM_API_URL}/reset?task_id={task_id}")
+            reset_resp = await client.post(f"{sim_api_url}/reset?task_id={task_id}")
             obs = reset_resp.json()
 
             mode = "fallback"
@@ -221,11 +228,12 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
                 action = await asyncio.to_thread(
                     llm_generate_action,
                     llm_client,
+                    model_name,
                     task_id,
                     obs.get("customer_query", ""),
                 )
 
-            resp = await client.post(f"{SIM_API_URL}/step?task_id={task_id}", json=action)
+            resp = await client.post(f"{sim_api_url}/step?task_id={task_id}", json=action)
             result = resp.json()
             score = float(result["reward"]["score"])
             done = bool(result.get("done", False))
@@ -240,13 +248,17 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
 
 
 async def main():
-    print(f"[START] sim_api_url={SIM_API_URL} model_name={MODEL_NAME or 'fallback'}")
+    # Read environment variables at runtime to capture validator-injected values
+    sim_api_url = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
+    model_name = os.getenv("MODEL_NAME", "")
+    
+    print(f"[START] sim_api_url={sim_api_url} model_name={model_name or 'fallback'}")
 
     llm_client = build_openai_client()
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
-            resp = await client.get(f"{SIM_API_URL}/tasks")
+            resp = await client.get(f"{sim_api_url}/tasks")
             task_ids = resp.json()
         except Exception:
             task_ids = ["EASY-001", "MEDIUM-001", "HARD-001", "EXTREME-001"]

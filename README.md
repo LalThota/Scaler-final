@@ -42,7 +42,7 @@ The reward function evaluates every action:
 
 ## 🧪 TASK DESIGN
 
-The environment includes 8 tasks ranging from EASY to EXTREME across multiple domains:
+The environment includes 4 tasks ranging from EASY to EXTREME across multiple domains:
 - **EASY**: Single clear intent (e.g., password reset).
 - **MEDIUM**: Ambiguous query (e.g., login issue + double charge).
 - **HARD**: Multi-intent with emotional tone (e.g., 10-year customer complaining/billing/manager request).

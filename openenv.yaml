@@ -18,22 +18,6 @@ tasks:
     difficulty: "EXTREME"
     domain: "incident_response"
     grader: "app.grader:grade_extreme_task_score"
-  - id: "MEDIUM-002"
-    difficulty: "MEDIUM"
-    domain: "b2b_saas"
-    grader: "app.grader:grade_medium_task_score"
-  - id: "HARD-002"
-    difficulty: "HARD"
-    domain: "trust_and_safety"
-    grader: "app.grader:grade_hard_task_score"
-  - id: "EASY-002"
-    difficulty: "EASY"
-    domain: "account_management"
-    grader: "app.grader:grade_easy_task_score"
-  - id: "EXTREME-002"
-    difficulty: "EXTREME"
-    domain: "platform_reliability"
-    grader: "app.grader:grade_extreme_task_score"
 api:
   port: 7860
   endpoints:
@@ -57,9 +41,5 @@ evaluation:
     MEDIUM-001: "app.grader:grade_medium_task_score"
     HARD-001: "app.grader:grade_hard_task_score"
     EXTREME-001: "app.grader:grade_extreme_task_score"
-    MEDIUM-002: "app.grader:grade_medium_task_score"
-    HARD-002: "app.grader:grade_hard_task_score"
-    EASY-002: "app.grader:grade_easy_task_score"
-    EXTREME-002: "app.grader:grade_extreme_task_score"
   max_steps_per_task: 8
   max_total_time_min: 20

@@ -57,62 +57,6 @@ TASKS: List[Task] = [
         ground_truth_response_keywords=["breach", "emergency", "legal", "investigation", "supervisor"],
         must_escalate=True,
         max_steps=8
-    ),
-    Task(
-        id="MEDIUM-002",
-        customer_query="My invoice says annual plan but we asked for monthly. Also the dashboard is missing usage charts.",
-        expected_intents=["billing_error", "feature_issue"],
-        expected_priority="medium",
-        expected_departments=["billing", "technical_support"],
-        difficulty="MEDIUM",
-        domain="b2b_saas",
-        customer_segment="small_business",
-        ambiguity_level="medium",
-        ground_truth_response_keywords=["invoice", "correct", "billing", "dashboard", "investigate"],
-        must_escalate=False,
-        max_steps=5
-    ),
-    Task(
-        id="HARD-002",
-        customer_query="Your bot leaked my private transcript and now my account is locked out. I want compensation and legal details.",
-        expected_intents=["security_breach_report", "login_issue", "legal_threat", "refund_request"],
-        expected_priority="critical",
-        expected_departments=["security", "technical_support", "legal", "billing"],
-        difficulty="HARD",
-        domain="trust_and_safety",
-        customer_segment="consumer",
-        ambiguity_level="high",
-        ground_truth_response_keywords=["security", "investigation", "urgent", "legal", "support"],
-        must_escalate=True,
-        max_steps=6
-    ),
-    Task(
-        id="EASY-002",
-        customer_query="Please update my email from oldmail to newmail.",
-        expected_intents=["profile_update"],
-        expected_priority="low",
-        expected_departments=["customer_relations"],
-        difficulty="EASY",
-        domain="account_management",
-        customer_segment="consumer",
-        ambiguity_level="low",
-        ground_truth_response_keywords=["email", "update", "confirm"],
-        must_escalate=False,
-        max_steps=3
-    ),
-    Task(
-        id="EXTREME-002",
-        customer_query="Production API latency spiked 10x, users cannot check out, and we see suspicious admin logins from unknown regions.",
-        expected_intents=["system_down", "security_breach_report", "payment_failure"],
-        expected_priority="critical",
-        expected_departments=["technical_support", "security", "billing"],
-        difficulty="EXTREME",
-        domain="platform_reliability",
-        customer_segment="enterprise",
-        ambiguity_level="high",
-        ground_truth_response_keywords=["incident", "security", "mitigation", "status", "escalate"],
-        must_escalate=True,
-        max_steps=8
     )
 ]
 

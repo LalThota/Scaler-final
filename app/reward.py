@@ -1,7 +1,7 @@
 from typing import Dict, List, Any
 from .models import Reward, Action, Task
 
-EPSILON = 1e-3
+EPSILON = 0.1
 
 # Action costs
 COSTS = {

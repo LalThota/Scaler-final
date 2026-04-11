@@ -1,7 +1,7 @@
 from typing import List, Set, Dict, Any
 from .models import Action, Task
 
-EPSILON = 1e-3
+EPSILON = 0.1
 
 
 def _clamp_open_interval(score: float) -> float:

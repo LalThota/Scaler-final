@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 import httpx
 from openai import OpenAI
 
-EPSILON = 1e-3
+EPSILON = 0.1
 
 # Keep terminal output strict for evaluator parsing.
 logging.basicConfig(level=logging.WARNING, format='%(message)s')
@@ -255,7 +255,7 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             return score
 
     except Exception as e:
-        print(f"[STEP] task_id={task_id} step=1 score=0.0010 done=false mode=error error={str(e)}")
+        print(f"[STEP] task_id={task_id} step=1 score=0.1000 done=false mode=error error={str(e)}")
         return EPSILON
 
 

@@ -2,6 +2,7 @@ from typing import Dict, List, Any
 from .models import Reward, Action, Task
 
 EPSILON = 0.1
+UPPER_BOUND = 1 - EPSILON
 
 # Action costs
 COSTS = {
@@ -16,7 +17,7 @@ def calculate_reward(
     step_count: int,
     repeated_errors: int,
     last_action: Action,
-    confidence: float = 0.0,
+    confidence: float = EPSILON,
     ambiguity_level: str = "low",
 ) -> Reward:
     total_score = sum(base_score_dict.values())
@@ -32,15 +33,15 @@ def calculate_reward(
     if last_action.mark_resolved:
         action_cost = COSTS.get("escalate", 0.1) # Treat resolution as a major action.
     
-    clarification_bonus = 0.0
+    clarification_bonus = 0
     if ambiguity_level in {"medium", "high"} and last_action.ask_clarification:
         clarification_bonus = 0.03
 
-    confidence_bonus = 0.05 * max(0.0, min(1.0, confidence))
+    confidence_bonus = 0.05 * max(EPSILON, min(UPPER_BOUND, confidence))
 
     # Combined reward
     reward_value = total_score - step_penalty - error_penalty - action_cost + clarification_bonus + confidence_bonus
-    reward_value = max(EPSILON, min(1.0 - EPSILON, reward_value))
+    reward_value = max(EPSILON, min(UPPER_BOUND, reward_value))
     
     # Feedback
     feedback_msgs = []

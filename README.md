@@ -135,12 +135,12 @@ Task catalog metadata (difficulty, domain, ambiguity, escalation requirements).
 - `[END] ...`
 
 Environment variables supported by the baseline:
-- `API_BASE_URL`: API endpoint to evaluate against (default `http://127.0.0.1:7860`)
-- `MODEL_NAME`: model identifier used by OpenAI client for LLM mode
-- `HF_TOKEN`: Hugging Face token used as OpenAI-compatible API key
-- `OPENAI_BASE_URL`: OpenAI-compatible base URL (default `https://router.huggingface.co/v1`)
+- `SUPPORT_API_URL` or `TASK_API_URL`: simulator API endpoint (default `http://127.0.0.1:7860`)
+- `API_BASE_URL`: LiteLLM proxy base URL injected by validator
+- `API_KEY`: LiteLLM proxy key injected by validator
+- `MODEL_NAME`: optional model identifier for LLM mode (default `gpt-3.5-turbo`)
 
-If `MODEL_NAME`/`HF_TOKEN` are not set, inference falls back to deterministic actions.
+If `API_KEY` is not set, inference falls back to deterministic actions.
 
 Run baseline:
 `python inference.py`

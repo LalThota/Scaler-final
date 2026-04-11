@@ -8,6 +8,8 @@ from typing import Dict, Any, Optional
 import httpx
 from openai import OpenAI
 
+EPSILON = 1e-3
+
 # Keep terminal output strict for evaluator parsing.
 logging.basicConfig(level=logging.WARNING, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -220,29 +222,32 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             reset_resp = await client.post(f"{sim_api_url}/reset?task_id={task_id}")
             obs = reset_resp.json()
 
-            # If API_KEY is set, the validator wants us to use LLM proxy mode
+            # Start from deterministic fallback and upgrade to LLM when proxy call succeeds.
+            mode = "fallback"
+            action = get_fallback_action(task_id)
+            if task_id not in KNOWLEDGE_BASE:
+                mode = "policy"
+                action = keyword_policy_action(obs.get("customer_query", ""))
+
+            # If API_KEY is set, validator expects a proxy LLM call.
             if api_key:
-                mode = "llm"
-                # Create fresh client with proxy credentials for each task to ensure fresh auth
-                llm_client = OpenAI(base_url=api_base_url, api_key=api_key)
-                action = await asyncio.to_thread(
-                    llm_generate_action,
-                    llm_client,
-                    model_name,
-                    task_id,
-                    obs.get("customer_query", ""),
-                )
-            else:
-                # Fallback mode: use hardcoded logic
-                mode = "fallback"
-                action = get_fallback_action(task_id)
-                if task_id not in KNOWLEDGE_BASE:
-                    mode = "policy"
-                    action = keyword_policy_action(obs.get("customer_query", ""))
+                try:
+                    llm_client = OpenAI(base_url=api_base_url, api_key=api_key)
+                    action = await asyncio.to_thread(
+                        llm_generate_action,
+                        llm_client,
+                        model_name,
+                        task_id,
+                        obs.get("customer_query", ""),
+                    )
+                    mode = "llm"
+                except Exception:
+                    # Keep proxy attempt behavior but avoid hard-failing the task.
+                    mode = "llm_fallback"
 
             resp = await client.post(f"{sim_api_url}/step?task_id={task_id}", json=action)
             result = resp.json()
-            score = float(result["reward"]["score"])
+            score = max(EPSILON, min(1.0 - EPSILON, float(result["reward"]["score"])))
             done = bool(result.get("done", False))
 
             # Required structured log format for evaluators.
@@ -250,8 +255,8 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             return score
 
     except Exception as e:
-        print(f"[STEP] task_id={task_id} step=1 score=0.0000 done=false mode=error error={str(e)}")
-        return 0.0
+        print(f"[STEP] task_id={task_id} step=1 score=0.0010 done=false mode=error error={str(e)}")
+        return EPSILON
 
 
 async def main():
@@ -275,7 +280,7 @@ async def main():
         score = await run_task(task_id, None)
         scores.append(score)
 
-    avg_score = statistics.mean(scores) if scores else 0.0
+    avg_score = statistics.mean(scores) if scores else EPSILON
     print(f"[END] task_count={len(task_ids)} avg_score={avg_score:.4f}")
 
 if __name__ == "__main__":

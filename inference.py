@@ -270,7 +270,7 @@ async def main():
         scores.append(score)
 
     avg_score = statistics.mean(scores) if scores else 0.0
-    print(f"[END] task_count={len(task_ids)} avg_score={avg_score:.4f}")
+    print(f"[END] task_count={len(task_ids)} avg_score={avg_score:.6f}")
 
 if __name__ == "__main__":
     asyncio.run(main())

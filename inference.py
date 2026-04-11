@@ -9,6 +9,7 @@ import httpx
 from openai import OpenAI
 
 EPSILON = 0.1
+UPPER_BOUND = 1 - EPSILON
 
 # Keep terminal output strict for evaluator parsing.
 logging.basicConfig(level=logging.WARNING, format='%(message)s')
@@ -247,7 +248,7 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
 
             resp = await client.post(f"{sim_api_url}/step?task_id={task_id}", json=action)
             result = resp.json()
-            score = max(EPSILON, min(1.0 - EPSILON, float(result["reward"]["score"])))
+            score = max(EPSILON, min(UPPER_BOUND, float(result["reward"]["score"])))
             done = bool(result.get("done", False))
 
             # Required structured log format for evaluators.

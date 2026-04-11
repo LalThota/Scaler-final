@@ -17,7 +17,7 @@ Adaptive Multi-Step CSOS++ is a production-grade OpenEnv designed to simulate a 
 This project is intentionally designed for OpenEnv-style benchmark submission:
 - Real-world support ticket workflow (not a toy game)
 - Typed observation/action/reward models
-- Deterministic grading and bounded reward in `[0.0, 1.0]`
+- Deterministic grading and bounded reward in `(0, 1)`
 - Multi-task evaluation (`EASY`, `MEDIUM`, `HARD`, `EXTREME`)
 - Dockerized deployment
 
@@ -89,7 +89,7 @@ Submit an agent action.
 - `step_count`: `int`
 
 ### Reward Range
-- Reward is always clipped to `[0.0, 1.0]`
+- Reward is always clipped to `(0, 1)`
 - Endpoint returns full reward breakdown and textual feedback
 
 ### GET `/state?task_id=<id>`

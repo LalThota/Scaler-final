@@ -22,7 +22,7 @@ class CustomerSupportEnv:
             conversation_history=[],
             status="open",
             step_count=0,
-            confidence=0.0,
+            confidence=0,
             suggested_next_action="classify"
         )
         self.repeated_errors = 0

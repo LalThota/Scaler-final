@@ -12,7 +12,7 @@ class Observation(BaseModel):
     conversation_history: List[Dict[str, str]] = Field(default_factory=list)
     status: str = "open"
     step_count: int = 0
-    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    confidence: float = Field(default=0, ge=0, le=1)
     suggested_next_action: str = "analyze"
 
 class Action(BaseModel):
@@ -24,7 +24,7 @@ class Action(BaseModel):
     ask_clarification: Optional[bool] = False
 
 class Reward(BaseModel):
-    score: float = Field(ge=0.0, le=1.0)
+    score: float = Field(ge=0, le=1)
     breakdown: Dict[str, float] = Field(default_factory=dict)
     feedback: str = ""
 

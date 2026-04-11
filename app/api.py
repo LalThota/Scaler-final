@@ -131,8 +131,8 @@ async def metrics():
     if not event_log:
         return {
             "events": 0,
-            "avg_score": 0.0,
-            "completion_rate": 0.0,
+            "avg_score": 0,
+            "completion_rate": 0,
             "by_difficulty": {},
             "by_domain": {},
             "by_customer_segment": {},

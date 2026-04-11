@@ -15,13 +15,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 SIM_API_URL = os.getenv("SUPPORT_API_URL", os.getenv("TASK_API_URL", "http://127.0.0.1:7860"))
-MODEL_NAME = (
-    os.getenv("MODEL_NAME")
-    or os.getenv("MODEL")
-    or os.getenv("OPENAI_MODEL")
-    or "gpt-4o-mini"
-)
-API_KEY = os.getenv("API_KEY", os.getenv("HF_TOKEN", ""))
+MODEL_NAME = os.getenv("MODEL_NAME", "")
+API_KEY = os.getenv("API_KEY", "")
 OPENAI_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 
 # Deterministic fallback actions to keep inference reproducible.
@@ -148,7 +143,7 @@ def keyword_policy_action(query: str) -> Dict[str, Any]:
 
 
 def build_openai_client() -> Optional[OpenAI]:
-    if not API_KEY:
+    if not MODEL_NAME or not API_KEY:
         return None
     return OpenAI(base_url=OPENAI_BASE_URL, api_key=API_KEY)
 
@@ -223,20 +218,12 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
                 action = keyword_policy_action(obs.get("customer_query", ""))
             if llm_client is not None:
                 mode = "llm"
-                try:
-                    action = await asyncio.wait_for(
-                        asyncio.to_thread(
-                            llm_generate_action,
-                            llm_client,
-                            task_id,
-                            obs.get("customer_query", ""),
-                        ),
-                        timeout=8.0,
-                    )
-                except Exception:
-                    # Keep task graded even if proxy/LLM call fails.
-                    mode = "llm_fallback"
-                    action = get_fallback_action(task_id)
+                action = await asyncio.to_thread(
+                    llm_generate_action,
+                    llm_client,
+                    task_id,
+                    obs.get("customer_query", ""),
+                )
 
             resp = await client.post(f"{SIM_API_URL}/step?task_id={task_id}", json=action)
             result = resp.json()
@@ -244,12 +231,12 @@ async def run_task(task_id: str, llm_client: Optional[OpenAI]) -> float:
             done = bool(result.get("done", False))
 
             # Required structured log format for evaluators.
-            print(f"[STEP] task_id={task_id} step=1 score={score:.6f} done={done} mode={mode}")
+            print(f"[STEP] task_id={task_id} step=1 score={score:.4f} done={done} mode={mode}")
             return score
 
     except Exception as e:
-        print(f"[STEP] task_id={task_id} step=1 score=0.001000 done=false mode=error error={str(e)}")
-        return 0.001
+        print(f"[STEP] task_id={task_id} step=1 score=0.0000 done=false mode=error error={str(e)}")
+        return 0.0
 
 
 async def main():
@@ -270,7 +257,7 @@ async def main():
         scores.append(score)
 
     avg_score = statistics.mean(scores) if scores else 0.0
-    print(f"[END] task_count={len(task_ids)} avg_score={avg_score:.6f}")
+    print(f"[END] task_count={len(task_ids)} avg_score={avg_score:.4f}")
 
 if __name__ == "__main__":
     asyncio.run(main())

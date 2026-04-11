@@ -106,8 +106,6 @@ async def get_task_details():
     return [
         {
             "id": task.id,
-            "grader": task.grader,
-            "has_grader": bool(task.grader),
             "difficulty": task.difficulty,
             "domain": task.domain,
             "customer_segment": task.customer_segment,

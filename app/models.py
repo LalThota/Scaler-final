@@ -24,14 +24,13 @@ class Action(BaseModel):
     ask_clarification: Optional[bool] = False
 
 class Reward(BaseModel):
-    score: float = Field(gt=0.0, lt=1.0)
+    score: float = Field(ge=0.0, le=1.0)
     breakdown: Dict[str, float] = Field(default_factory=dict)
     feedback: str = ""
 
 class Task(BaseModel):
     id: str
     customer_query: str
-    grader: str = "app.grader:grade_action_score"
     expected_intents: List[str]
     expected_priority: str
     expected_departments: List[str]

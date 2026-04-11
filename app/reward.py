@@ -1,9 +1,6 @@
 from typing import Dict, List, Any
 from .models import Reward, Action, Task
 
-# Keep scores safely away from display/rounding boundaries used by validators.
-EPSILON = 1e-3
-
 # Action costs
 COSTS = {
     "classify": 0.01,
@@ -41,8 +38,7 @@ def calculate_reward(
 
     # Combined reward
     reward_value = total_score - step_penalty - error_penalty - action_cost + clarification_bonus + confidence_bonus
-    # Validator requires strict (0, 1) bounds, not inclusive [0, 1].
-    reward_value = max(EPSILON, min(1.0 - EPSILON, reward_value))
+    reward_value = max(0.0, min(1.0, reward_value))
     
     # Feedback
     feedback_msgs = []

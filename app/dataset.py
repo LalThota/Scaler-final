@@ -57,62 +57,6 @@ TASKS: List[Task] = [
         ground_truth_response_keywords=["breach", "emergency", "legal", "investigation", "supervisor"],
         must_escalate=True,
         max_steps=8
-    ),
-    Task(
-        id="MEDIUM-002",
-        customer_query="My invoice shows the wrong plan and my dashboard usage chart is missing this week.",
-        expected_intents=["billing_error", "feature_issue"],
-        expected_priority="medium",
-        expected_departments=["billing", "technical_support"],
-        difficulty="MEDIUM",
-        domain="b2b_saas",
-        customer_segment="small_business",
-        ambiguity_level="medium",
-        ground_truth_response_keywords=["invoice", "plan", "dashboard", "usage", "investigate"],
-        must_escalate=False,
-        max_steps=5
-    ),
-    Task(
-        id="HARD-002",
-        customer_query="We detected suspicious logins, we are locked out, and legal is preparing action unless refunds are processed immediately.",
-        expected_intents=["security_breach_report", "login_issue", "legal_threat", "refund_request"],
-        expected_priority="critical",
-        expected_departments=["security", "technical_support", "legal", "billing"],
-        difficulty="HARD",
-        domain="trust_and_safety",
-        customer_segment="enterprise",
-        ambiguity_level="high",
-        ground_truth_response_keywords=["security", "investigation", "access", "legal", "refund"],
-        must_escalate=True,
-        max_steps=6
-    ),
-    Task(
-        id="EASY-002",
-        customer_query="Please update my account email address.",
-        expected_intents=["profile_update"],
-        expected_priority="low",
-        expected_departments=["customer_relations"],
-        difficulty="EASY",
-        domain="account_management",
-        customer_segment="consumer",
-        ambiguity_level="low",
-        ground_truth_response_keywords=["update", "email", "confirm"],
-        must_escalate=False,
-        max_steps=3
-    ),
-    Task(
-        id="EXTREME-002",
-        customer_query="Checkout is failing globally, users report potential account compromise, and revenue is impacted across regions.",
-        expected_intents=["system_down", "security_breach_report", "payment_failure"],
-        expected_priority="critical",
-        expected_departments=["technical_support", "security", "billing"],
-        difficulty="EXTREME",
-        domain="platform_reliability",
-        customer_segment="enterprise",
-        ambiguity_level="high",
-        ground_truth_response_keywords=["incident", "mitigation", "security", "checkout", "escalation"],
-        must_escalate=True,
-        max_steps=8
     )
 ]
 
